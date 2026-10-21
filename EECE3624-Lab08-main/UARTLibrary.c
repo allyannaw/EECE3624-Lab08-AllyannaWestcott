@@ -34,15 +34,51 @@
 // sets the baudrate to 9600, with 8 data bits, 1 stop bit, and no parity
 void uart_init(long unsigned int baudrate, unsigned char databits, unsigned char stopbits, unsigned char parity) {
     /* your code here */
-	// set baud rate (via UBRR0 high and low registers)
-    
+	// set baud rate (via UBRR1 high and low registers)
+	unsigned int ubrr = (7372800 / (16 * baudrate))-1;
+    UBRR1H = (unsigned char)(ubrr>>8);
+	UBRR1L = (unsigned char)ubrr;
+	
+	UCSR1A = 0x00;
+	UCSR1B = 0x00;
+	UCSR1C = 0x00;
+	
 	// set databits
+	if(databits == 7){ //databits =7 then 010
+	UCSR1B &= ~(1<<UCSZ12);
+	UCSR1C |= (1<<UCSZ11);
+	UCSR1C &= ~(1<<UCSZ10);
+	}
+	else{ //databits = 8 then 011
+		UCSR1B &= ~(1<<UCSZ12);
+		UCSR1C |= (1<<UCSZ11);
+		UCSR1C |= (1<<UCSZ10);
+	}
     
 	// set parity
-    
+	if(parity == 1){ //odd so 11
+		UCSR1C |= (1<<UPM11 | 1<<UPM10);
+	}
+	else if(parity == 2){ //even so 10
+		UCSR1C |= (1<<UPM11);
+		UCSR1C &= ~(1<<UPM10);
+	}
+	else {//no parity so 00
+		UCSR1C &= ~(1<<UPM11);
+		UCSR1C &= ~(1<<UPM10);
+	}
+	
     // set stopbits
-    
+    if (stopbits == 1){ //1 bit
+		UCSR1C &= ~(1<<USBS1); //set usbs1 to 0
+	}
+	else{
+		UCSR1C |= (1<<USBS1); //set USBS to 1 for 2 bit
+	}
+	
 	// finally, enable receiver and transmitter
+	UCSR1B |= (1<<RXEN1 | 1<<TXEN1); //enable receive and transmitter
+	
     
 }
 
@@ -51,14 +87,29 @@ void uart_init(long unsigned int baudrate, unsigned char databits, unsigned char
 // as the function's only argument) in the buffer and returns. No error
 // checking is performed and the function does not return a value.
 void uart_tx(unsigned char data) {
+	
     /* your code here */
+	while (!(UCSR1A & (1<<UDRE1))); // loops until UDRE1 turns to 1 signaling empty transmit buffer
+	UDR1 = data;
+	return;
+}
 
+void uart_print(char* str) { //credit to Mandy! for this nifty function!
+	
+	while(*str != '\0'){
+		uart_tx(*str);
+		str++;
+		
+	}
 }
 
 // This function blocks until a character is received in the USART input
 // buffer. Once a character arrives, it is passed back to the caller as
 // an unsigned character. No error checking is performed.
 unsigned char uart_rx(void) {
+	
 	/* your code here */
+	while (!(UCSR1A & (1 <<RXC1)));
+	return UDR1;
     
 }

@@ -4,8 +4,8 @@
  *    Author: Dr. Greg Nordstrom
  *   Created: 12/30/17
  *  Mod Date: 3/28/19, 1/17/21
- *  Modified:
- *   ModDate:
+ *  Modified:Allyanna Westcott
+ *   ModDate: 10/20/2026
  * 
  * Processor: ATmega128A (on the ReadyAVR board)
  *
@@ -41,7 +41,7 @@ int main(void)
 
     /* See the UARTLibrary.h for available calls.
 	 *     	  // initialize the UART
-	 *     	  uart_init(BAUDRATE, DATABITS, STOPBITS, PARITY);
+	 *    	  uart_init(BAUDRATE, DATABITS, STOPBITS, PARITY);
 	 *
 	 *        // transmit a value (0x41) to the comm port
 	 *        c = 0x41;
@@ -50,11 +50,49 @@ int main(void)
 	 *        // receive a byte from the comm port
 	 *        c = uart_rx();
 	 */
-
+	DDRA = 0xFF;  // Set the Direction for all PORTA pints to be outputs
+	PORTA = 0xFF; //turn all LEDS off
+	
 	uart_init(BAUDRATE, DATABITS, STOPBITS, PARITY);
+	
+	uart_print("\r\n\r\nRS232 Communications Server\r\nStatus: Active\r\nAllyanna Westcott\r\nEECE3624\r\nFall 2026\r\n\r\n");
+	
+	unsigned int count = 0; //says "BYE" when countdown reaches three
+	
 	while(1)
-	{
+	{ 
 		/* your loop code here */
+		unsigned char typed = uart_rx();
+		
+		PORTA = 0x00;
+		_delay_ms(75);
+		PORTA = 0xFF;
+		
+		if(typed== 'e'){
+			count = 1;
+		}
+		else if((count==1) & (typed=='n')){
+			count++;
+		}
+		else if((count ==2 ) & (typed == 'd')){
+			uart_print("d \r\nBye");
+			break;
+		}
+		
+		if(typed == 0x0D){
+			uart_print("\r\n");
+		}
+		else if(typed == 0x1B){ //esc
+			uart_print("\r\n\r\nRS232 Communications Server\r\nStatus: Active\r\nAllyanna Westcott\r\nEECE3624\r\nFall 2026\r\n\r\n");
+		}
+		
+		
+		uart_tx(typed);
+		
+		
+		
+
+		
 		
 	}
 	return 0;

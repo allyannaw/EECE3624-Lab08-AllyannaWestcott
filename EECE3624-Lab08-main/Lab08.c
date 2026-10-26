@@ -69,6 +69,7 @@ int main(void)
 		PORTA = 0xFF;
 		
 		if(typed== 'e'){
+			uart_print(typed);
 			count = 1;
 		}
 		else if((count==1) & (typed=='n')){
